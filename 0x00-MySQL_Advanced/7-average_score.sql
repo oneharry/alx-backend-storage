@@ -3,7 +3,7 @@ DELIMITER $$
 
 CREATE PROCEDURE ComputeAverageScoreForUser(IN user_id INT)
 BEGIN
-	    DECLARE avgerage INT;
+	    DECLARE avgerage FLOAT;
 	    SELECT AVG(score) INTO avgerage
 	    FROM corrections
 	    WHERE user_id = user_id;
