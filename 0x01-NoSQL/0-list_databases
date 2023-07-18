@@ -1,0 +1,2 @@
+// lists all databases in the mongod
+show dbs
