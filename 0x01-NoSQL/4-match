@@ -1,0 +1,2 @@
+//List all document in school collection that match name
+db.school.aggregate({$match: {"name": "Holberton school"}})
