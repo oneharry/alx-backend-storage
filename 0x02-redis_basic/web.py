@@ -7,6 +7,8 @@ from functools import wraps
 
 
 red = redis.Redis()
+
+
 def count_requests(method: Callable) -> Callable:
     """Decorator"""
     @wraps(method)
@@ -20,7 +22,9 @@ def count_requests(method: Callable) -> Callable:
         html = method(url)
         red.setex(f"cached:{url}", 10, html)
         return html
+
     return wrapper
+
 
 @count_requests
 def get_page(url: str) -> str:
