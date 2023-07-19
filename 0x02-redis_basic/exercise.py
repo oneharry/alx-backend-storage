@@ -3,6 +3,7 @@
 import redis
 import uuid
 from typing import Union, Callable
+from functools import wraps
 
 
 class Cache:
@@ -13,11 +14,25 @@ class Cache:
         self._redis.flushdb()
 
 
+    @staticmethod
+    def count_calls(method: Callable) -> Callable:
+        """ Decoratore method"""
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            """Wrapper method"""
+            key = f"{method.__qualname__}_calls"
+            self._redis.incr(key)
+            return method(self, *args, **kwargs)
+        return wrapper
+
+
+    @count_calls
     def store(self, data: Union[str, float, bytes, int]) -> str:
         """returns a string of random number"""
         rand_key = str(uuid.uuid4())
         self._redis.set(rand_key, data)
         return rand_key
+
 
     def get(self, key: str, fn: Callable = None) -> Union[bytes, str, None]:
         """Checks if key exists"""
