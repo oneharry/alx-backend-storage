@@ -13,6 +13,20 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @staticmethod
+    def call_history(method: Callable) -> Callable:
+        """ static method """
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            """ Wrapper methods"""
+            inputs_key = f"{method.__qualname__}:inputs"
+            outputs_key = f"{method.__qualname__}:outputs"
+            self._redis.rpush(inputs_key, str(args))
+            output = method(self, *args, **kwargs)
+            self._redis.rpush(outputs_key, output)
+            return output
+        return wrapper
+
 
     @staticmethod
     def count_calls(method: Callable) -> Callable:
@@ -26,6 +40,7 @@ class Cache:
         return wrapper
 
 
+    @call_history
     @count_calls
     def store(self, data: Union[str, float, bytes, int]) -> str:
         """returns a string of random number"""
