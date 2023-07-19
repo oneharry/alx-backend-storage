@@ -27,7 +27,6 @@ class Cache:
             return output
         return wrapper
 
-
     @staticmethod
     def count_calls(method: Callable) -> Callable:
         """ Decoratore method"""
@@ -39,7 +38,6 @@ class Cache:
             return method(self, *args, **kwargs)
         return wrapper
 
-
     @call_history
     @count_calls
     def store(self, data: Union[str, float, bytes, int]) -> str:
@@ -47,7 +45,6 @@ class Cache:
         rand_key = str(uuid.uuid4())
         self._redis.set(rand_key, data)
         return rand_key
-
 
     def get(self, key: str, fn: Callable = None) -> Union[bytes, str, None]:
         """Checks if key exists"""
@@ -57,7 +54,6 @@ class Cache:
         res = self._redis.get(key)
         if fn is not None:
             return fn(res)
-
         return res
 
     def get_str(self, key: str) -> Union[str, None]:
@@ -66,4 +62,18 @@ class Cache:
 
     def get_int(self, key: str) -> Union[int, None]:
         """ Parametize get to int"""
-       return self.get(key, fn=int) 
+        return self.get(key, fn=int)
+
+    def replay(method: Callable):
+        """display the  call history of a particular function"""
+        cache = Cache()
+
+        inputs_key = f"{method.__qualname__}:inputs"
+        outputs_key = f"{method.__qualname__}:outputs"
+
+        inputs = cache._redis.lrange(inputs_key, 0, -1)
+        outputs = cache._redis.lrange(outputs_key, 0, -1)
+        print(f"{method.__qualname__} was called {len(inputs)} times:")
+        for input_data, output_data in zip(inputs, outputs):
+            print(f"{method.__qualname__}{input_data.decode()} ->
+                  {output_data.decode()}")
