@@ -2,7 +2,7 @@
 """python redis script"""
 import redis
 import uuid
-from typing import Union
+from typing import Union, Callable
 
 
 class Cache:
@@ -19,4 +19,21 @@ class Cache:
         self._redis.set(rand_key, data)
         return rand_key
 
-    
+    def get(self, key: str, fn: Callable = None) -> Union[bytes, str, None]:
+        """Checks if key exists"""
+        if not self._redis.exists(key):
+            return None
+
+        res = self._redis.get(key)
+        if fn is not None:
+            return fn(res)
+
+        return res
+
+    def get_str(self, key: str) -> Union[str, None]:
+        """Parametize get as string"""
+        return self.get(key, fn=lambda a: a.decode())
+
+    def get_int(self, key: str) -> Union[int, None]:
+        """ Parametize get to int"""
+       return self.get(key, fn=int) 
