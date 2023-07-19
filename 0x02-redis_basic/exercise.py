@@ -2,7 +2,7 @@
 """python redis script"""
 import redis
 import uuid
-from typing import Union, Callable
+from typing import Union, Callable, Optional
 from functools import wraps
 
 
@@ -11,7 +11,7 @@ def count_calls(method: Callable) -> Callable:
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         """Wrapper method"""
-        key = f"{method.__qualname__}_calls"
+        key = method.__qualname__
         self._redis.incr(key)
         return method(self, *args, **kwargs)
     return wrapper
@@ -22,16 +22,17 @@ def call_history(method: Callable) -> Callable:
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         """ Wrapper methods"""
-        inputs_key = f"{method.__qualname__}:inputs"
-        outputs_key = f"{method.__qualname__}:outputs"
+        key = method.__qualname__
+        inputs_key = key + ":inputs"
+        outputs_key = key + ":outputs"
         self._redis.rpush(inputs_key, str(args))
         output = method(self, *args, **kwargs)
-        self._redis.rpush(outputs_key, output)
+        self._redis.rpush(outputs_key, str(output))
         return output
     return wrapper
 
 
-def replay(method: Callable):
+def replay(method: Callable) -> None:
     """display the  call history of a particular function"""
     cache = redis.Redis()
 
@@ -72,12 +73,12 @@ class Cache:
             return fn(res)
         return res
 
-    def get_str(self, key: str) -> Union[str, None]:
+    def get_str(self, key: str) -> str:
         """Parametize get as string"""
         res = self.get(key)
         return res.decode('utf-8')
 
-    def get_int(self, key: str) -> Union[int, None]:
+    def get_int(self, key: str) -> int:
         """ Parametize get to int"""
         res = self.get(key)
 
